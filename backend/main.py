@@ -18,17 +18,25 @@ app = FastAPI()
 class ThemeRequest(BaseModel):
     themes: str
     choices: list[str] = []
+    avoided: list[str] = []
 
 # Generate scenario & actions
 @app.post("/generate")
 async def generate_scenario(req: ThemeRequest):
     prompt = f"""
-    Create a funny, weird, or dramatic situation based on the following themes: {req.themes}.
-    The situation should require a decision from the user.
+    Pick ONE of the following themes: {req.themes}.
+    The situation should be realistic but creative, and should involve a choice or decision.
+    Each situation should be distinct from others and should not repeat the same structure or type of challenge.
+    For example, a situation about 'sports' could involve a decision at a game, while one about 'travel' could be about a dilemma in a foreign country.
+    Avoid mixing themes or repeating similar situations.
+    The situation should require a decision from me. Use no more than 50 words.
+    The situation should be different to any of the previous ones generated.
+    Provide two possible actions I can take. Make the options interesting and different from each other, so that it is telling of my personality.
     
-    Then provide two possible actions. Make them interesting and different.
-    
-    Format:
+    Example situation:
+    "You're facing a major dilema that requires you to act quickly. What are you more likely to do?"
+
+    Format the response like this:
     ---
     Situation: [Generated situation]
     
@@ -43,15 +51,15 @@ async def generate_scenario(req: ThemeRequest):
     return {"scenario": response.text.strip()}
 
 # Personality Analysis
-@app.post("/analyze")
-async def analyze_personality(req: ThemeRequest):
+@app.post("/analyse")
+async def analyse_personality(req: ThemeRequest):
     prompt = f"""
-    Based on the user's choices below, write a fun and concise personality analysis:
-    
-    Choices:
-    {req.choices}
+    This is a list of actions I have chosen to take: {req.choices}
 
-    Summary in 2-3 sentences.
+    While this is a list of actions I have avoided: {req.avoided}
+    I want you to analyse my personality based on these choices and avoided actions.
+
+    Write 2-3 sentences summarising my personality in an engaging way. You can roast me and be savage.
     """
 
     model = genai.GenerativeModel("gemini-1.5-flash")
