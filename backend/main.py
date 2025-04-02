@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import google.generativeai as genai
 import os
+import re
 from dotenv import load_dotenv
 
 # Load API Key from .env
@@ -56,8 +57,18 @@ async def generate_scenario(req: ThemeRequest):
 
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(prompt)
+
+    raw_text = response.text
     
-    return {"scenario": response.text.strip()}
+    situation_match = re.search(r"Situation:\s*(.*)", raw_text)
+    choice_matches = re.findall(r"\d+\.\s*(.*)", raw_text)
+
+    if situation_match and len(choice_matches) == 2:
+        situation = situation_match.group(1)
+        choice1, choice2 = choice_matches
+        return {"situation": situation, "choice1": choice1, "choice2": choice2}
+    
+    return {"error": "Failed to parse AI response"}
 
 # Personality Analysis
 @app.post("/analyze")
