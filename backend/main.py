@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from pydantic import BaseModel
 import google.generativeai as genai
@@ -13,6 +14,14 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # FastAPI App
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (for development)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Request Model
 class ThemeRequest(BaseModel):
@@ -51,8 +60,9 @@ async def generate_scenario(req: ThemeRequest):
     return {"scenario": response.text.strip()}
 
 # Personality Analysis
-@app.post("/analyse")
-async def analyse_personality(req: ThemeRequest):
+@app.post("/analyze")
+async def analyze_personality(req: ThemeRequest):
+    print("Received choices from frontend:", req.choices)  # Debug log
     prompt = f"""
     This is a list of actions I have chosen to take: {req.choices}
 
