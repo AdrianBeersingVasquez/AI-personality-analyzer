@@ -39,8 +39,8 @@ function App() {
         <div>
           <h3>Scenario</h3>
           <p>{scenario}</p>
-          <button onClick={() => selectChoice("Choice 1")}>Choice 1</button>
-          <button onClick={() => selectChoice("Choice 2")}>Choice 2</button>
+          <button onClick={() => selectChoice(scenario.choice1)}>{scenario.choice1}</button>
+          <button onClick={() => selectChoice(scenario.choice2)}>{scenario.choice2}</button>
         </div>
       )}
 
