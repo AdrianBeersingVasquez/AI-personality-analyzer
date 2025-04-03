@@ -29,6 +29,7 @@ class ThemeRequest(BaseModel):
     themes: str
     choices: list[str] = []
     avoided: list[str] = []
+    personalityMode: str
 
 # Generate scenario & actions
 @app.post("/generate")
@@ -74,14 +75,22 @@ async def generate_scenario(req: ThemeRequest):
 @app.post("/analyze")
 async def analyze_personality(req: ThemeRequest):
     print("Received choices from frontend:", req.choices)  # Debug log
-    prompt = f"""
-    This is a list of actions I have chosen to take: {req.choices}
+    
+    if req.personalityMode == "nice":
+        prompt = f"""
+        return the phrase "Be nice!"
+        """
 
-    While this is a list of actions I have avoided: {req.avoided}
-    I want you to analyse my personality based on these choices and avoided actions.
+    else:
+        # Savage mode
+        prompt = f"""
+        This is a list of actions I have chosen to take: {req.choices}
 
-    Write 2-3 sentences summarising my personality in an engaging way. You can roast me and be savage.
-    """
+        While this is a list of actions I have avoided: {req.avoided}
+        I want you to analyse my personality based on these choices and avoided actions.
+
+        Write 2-3 sentences summarising my personality in an engaging way. You can roast me and be savage.
+        """
 
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(prompt)
