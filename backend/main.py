@@ -78,9 +78,13 @@ async def generate_scenario(req: GenerateRequest):
     situation_match = re.search(r"Situation:\s*(.*)", raw_text)
     choice_matches = re.findall(r"\d+\.\s*(.*)", raw_text)
 
+    print(f"raw_text: {raw_text}")  # Debugging
+
     if situation_match and len(choice_matches) == 2:
         situation = situation_match.group(1)
         choice1, choice2 = choice_matches
+
+        print(f"situation: {situation} \nC1: {choice1} \nC2: {choice2}")  # Debugging
         return {"situation": situation, "choice1": choice1, "choice2": choice2}
     
     return {"error": "Failed to parse AI response"}
@@ -89,6 +93,7 @@ async def generate_scenario(req: GenerateRequest):
 @app.post("/analyze")
 async def analyze_personality(req: ThemeRequest):
     print("Received choices from frontend:", req.choices)  # Debug log
+    print("Received avoided choices from frontend:", req.avoided)
     
     if req.personalityMode == "nice":
         prompt = f"""

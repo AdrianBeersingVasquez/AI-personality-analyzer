@@ -7,6 +7,7 @@ function App() {
   const [theme, setTheme] = useState("");
   const [scenario, setScenario] = useState("");
   const [currentChoices, setCurrentChoices] = useState([]);
+  const [avoidedChoices, setAvoidedChoices] = useState([]);
   const [analysis, setAnalysis] = useState("");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [step, setStep] = useState(1);
@@ -48,7 +49,9 @@ function App() {
   // User selects a choice
   const selectChoice = (choiceText) => {
     console.log("User selected:", choiceText);
+    const avoidedChoice = choiceText === scenario.choice1 ? scenario.choice2 : scenario.choice1; // Determine the avoided choice
     setCurrentChoices([...currentChoices, choiceText]);
+    setAvoidedChoices([...avoidedChoices, avoidedChoice]);
 
     // If more questions remain, fetch the next scenario
     if (questionIndex + 1 < totalQuestions) {
@@ -72,6 +75,7 @@ function App() {
     console.log("Analyzing personality with:", {
       themes: theme,
       choices: currentChoices,
+      avoided: avoidedChoices,
       personalityMode: personalityMode,
     });
 
@@ -83,6 +87,7 @@ function App() {
         const response = await axios.post("http://127.0.0.1:8000/analyze", {
           themes: theme,
           choices: currentChoices,
+          avoided: avoidedChoices,
           personalityMode: personalityMode,
         });
 
