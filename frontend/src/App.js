@@ -2,69 +2,134 @@ import React, { useState } from "react";
 import axios from "axios";
 
 function App() {
+  // State variables
+  const [personalityMode, setPersonalityMode] = useState("");
   const [theme, setTheme] = useState("");
   const [scenario, setScenario] = useState("");
-  const [choices, setChoices] = useState([]);
-  const [analysis, setAnalysis] = useState("");
   const [currentChoices, setCurrentChoices] = useState([]);
+  const [analysis, setAnalysis] = useState("");
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [step, setStep] = useState(1);
+  const totalQuestions = 3; // Adjust the number of questions
 
+  // User selects "Be Nice" or "Be Mean"
+  const selectPersonalityMode = (mode) => {
+    console.log("Personality mode selected:", mode);
+    setPersonalityMode(mode);
+    setStep(2);
+  };
+
+  // Generates a scenario from the backend
   const generateScenario = async () => {
+    if (!theme.trim()) {
+      console.error("Theme is empty! Cannot generate scenario.");
+      return;
+    }
+
     try {
       const response = await axios.post("http://127.0.0.1:8000/generate", { themes: theme });
-      console.log("Generated response:", response.data);  // Debugging
+      console.log("Generated scenario:", response.data); // Debugging
+    
       setScenario({
         text: response.data.situation,
         choice1: response.data.choice1,
         choice2: response.data.choice2,
       });
+      setStep(3);
     } catch (error) {
-      console.error("Error generating scenario:", error);
-    }
-  };
-
-  const selectChoice = (choice) => {
-    const updatedChoices = [...currentChoices, choice];
-    console.log("User selected:", choice);  // Debugging
-    setCurrentChoices(updatedChoices);
-  };
-
-  const analyzePersonality = async () => {
-    console.log("Choices sent for analysis:", currentChoices); // Debugging
-    try {
-      const response = await axios.post("http://127.0.0.1:8000/analyze", { themes: theme, choices: currentChoices });
-      console.log("Analysis received:", response.data.analysis); // Debugging
-      setAnalysis(response.data.analysis);
-    } catch (error) {
-      console.error("Error analyzing personality:", error);
+      console.error("Error generating scenario:", error.response?.data || error.message);
     }
   };
   
 
+  // User selects a choice
+  const selectChoice = (choiceText) => {
+    console.log("User selected:", choiceText);
+    setCurrentChoices([...currentChoices, choiceText]);
+
+    // If more questions remain, fetch the next scenario
+    if (questionIndex + 1 < totalQuestions) {
+      setQuestionIndex(questionIndex + 1);
+      generateScenario();
+    } else {
+      // If all questions answered, proceed to analysis
+      setScenario(null);
+      analyzePersonality();
+    }
+    setStep(4);
+  };
+
+  // Sends choices to FastAPI for personality analysis
+  const analyzePersonality = async () => {
+    if (!personalityMode || !theme.trim() || currentChoices.length === 0) {
+      console.error("Missing required data for personality analysis!");
+      return;
+    }
+    
+    console.log("Analyzing personality with:", {
+      themes: theme,
+      choices: currentChoices,
+      personalityMode: personalityMode,
+    });
+
+    setScenario(null); // Hide scenario UI
+    setAnalysis("Analyzing your personality...");
+
+    setTimeout(async () => {
+      try {
+        const response = await axios.post("http://127.0.0.1:8000/analyze", {
+          themes: theme,
+          choices: currentChoices,
+          personalityMode: personalityMode,
+        });
+
+        console.log("Received analysis:", response.data.analysis);
+        setAnalysis(response.data.analysis);
+      } catch (error) {
+        console.error("Error analyzing personality:", error.response?.data || error.message);
+      }
+    }, 1000); // Simulated delay for UX
+  };
+
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+    <div style={{ padding: "20px", fontFamily: "Arial", textAlign: "center" }}>
       <h1>AI Personality Quiz</h1>
-      <input
-        type="text"
-        placeholder="Enter a theme (e.g., space, medieval, cooking)"
-        value={theme}
-        onChange={(e) => setTheme(e.target.value)}
 
-
-      />
-      <button onClick={generateScenario}>Generate Scenario</button>
-
-      {scenario.text && (
+      {/* Personality Selection */}
+      {step === 1 && !personalityMode && (
         <div>
-          <h3>Scenario</h3>
+          <p>Choose how the AI should analyze your personality:</p>
+          <button onClick={() => selectPersonalityMode("nice")}>Be Nice</button>
+          <button onClick={() => selectPersonalityMode("mean")}>Be Mean</button>
+        </div>
+      )}
+
+      {/* Theme Selection */}
+      {step === 2 && personalityMode && !scenario && !analysis && (
+        <div>
+          <p>Enter a theme for your quiz (e.g., space, medieval, cooking):</p>
+          <input
+            type="text"
+            placeholder="Enter a theme"
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+          />
+          <button onClick={generateScenario} disabled={!theme.trim()}>Start Quiz</button>
+        </div>
+      )}
+
+      {/* Scenario Display */}
+      {step === 3 && scenario && (
+        <div>
+          <h3>Scenario {questionIndex + 1}:</h3>
           <p>{scenario.text}</p>
           <button onClick={() => selectChoice(scenario.choice1)}>{scenario.choice1}</button>
           <button onClick={() => selectChoice(scenario.choice2)}>{scenario.choice2}</button>
         </div>
       )}
 
-      <button onClick={analyzePersonality}>Analyze Personality</button>
-
-      {analysis && (
+      {/* Personality Analysis */}
+      {step === 4 && analysis && (
         <div>
           <h3>Your Personality Analysis:</h3>
           <p>{analysis}</p>
