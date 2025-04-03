@@ -5,6 +5,12 @@ import google.generativeai as genai
 import os
 import re
 from dotenv import load_dotenv
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 
 # Load API Key from .env
 load_dotenv()
@@ -24,6 +30,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class GenerateRequest(BaseModel):
+    themes: str
+
 # Request Model
 class ThemeRequest(BaseModel):
     themes: str
@@ -33,7 +42,12 @@ class ThemeRequest(BaseModel):
 
 # Generate scenario & actions
 @app.post("/generate")
-async def generate_scenario(req: ThemeRequest):
+async def generate_scenario(req: GenerateRequest):
+    logger.debug(f"Received request: {req}")  # Ensure this is logged
+    print(f"Received request: {req}")  # Also use print() for extra visibility
+
+    print("Received request:", req.themes)  # Debugging
+
     prompt = f"""
     Pick ONE of the following themes: {req.themes}.
     The situation should be realistic but creative, and should involve a choice or decision.
