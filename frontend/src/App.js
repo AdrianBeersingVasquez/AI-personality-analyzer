@@ -10,7 +10,7 @@ function App() {
   const [analysis, setAnalysis] = useState("");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [step, setStep] = useState(1);
-  const totalQuestions = 3; // Adjust the number of questions
+  const totalQuestions = 2; // Adjust the number of questions
 
   // User selects "Be Nice" or "Be Mean"
   const selectPersonalityMode = (mode) => {
@@ -25,11 +25,15 @@ function App() {
       console.error("Theme is empty! Cannot generate scenario.");
       return;
     }
+    console.log("Sending request to backend:", { themes: theme });
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/generate", { themes: theme });
-      console.log("Generated scenario:", response.data); // Debugging
-    
+      const response = await axios.post(
+        "http://127.0.0.1:8000/generate",
+        { themes: theme },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      console.log("Generated scenario:", response.data);
       setScenario({
         text: response.data.situation,
         choice1: response.data.choice1,
@@ -40,7 +44,6 @@ function App() {
       console.error("Error generating scenario:", error.response?.data || error.message);
     }
   };
-  
 
   // User selects a choice
   const selectChoice = (choiceText) => {
@@ -65,7 +68,7 @@ function App() {
       console.error("Missing required data for personality analysis!");
       return;
     }
-    
+
     console.log("Analyzing personality with:", {
       themes: theme,
       choices: currentChoices,
@@ -119,7 +122,7 @@ function App() {
       )}
 
       {/* Scenario Display */}
-      {step === 3 && scenario && (
+      {step === 3 && (
         <div>
           <h3>Scenario {questionIndex + 1}:</h3>
           <p>{scenario.text}</p>
