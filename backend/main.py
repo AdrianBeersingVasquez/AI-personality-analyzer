@@ -80,13 +80,30 @@ async def generate_scenario(req: GenerateRequest):
 
     print(f"raw_text: {raw_text}")  # Debugging
 
-    if situation_match and len(choice_matches) == 2:
-        situation = situation_match.group(1)
-        choice1, choice2 = choice_matches
+    # Split the text into situation and choices parts
+    parts = raw_text.split("Situation:", 1)
+    if len(parts) < 2:
+        print("Failed to find 'Situation:' in response:", raw_text)
+        return {"error": "Failed to parse AI response"}
+    
+    # Extract situation (everything after "Situation:" until the next section)
+    situation_part = parts[1].strip()
+    situation_match = re.search(r"^(.*?)(?=\n\s*\d+\.|$)", situation_part, re.DOTALL)
+    if not situation_match:
+        print("Failed to extract situation:", situation_part)
+        return {"error": "Failed to parse AI response"}
+    situation = situation_match.group(1).strip()
 
-        print(f"situation: {situation} \nC1: {choice1} \nC2: {choice2}")  # Debugging
+    # Extract choices from the remaining text
+    choices_part = situation_part[situation_match.end():].strip()
+    choice_matches = re.findall(r"^\d+\.\s*(.*)$", choices_part, re.MULTILINE)
+
+    if len(choice_matches) >= 2:
+        choice1, choice2 = choice_matches[:2]  # Take the first two matches
+        print("Parsed response:", {"situation": situation, "choice1": choice1, "choice2": choice2})  # Debug
         return {"situation": situation, "choice1": choice1, "choice2": choice2}
     
+    print("Failed to parse choices from:", choices_part)  # Debug
     return {"error": "Failed to parse AI response"}
 
 # Personality Analysis
