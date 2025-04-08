@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import HomePage from "./components/HomePage";
 
 function App() {
   // State variables
@@ -100,10 +101,28 @@ function App() {
   };
 
   return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <h1 className="text-3xl font-bold text-blue-500">Hello, Tailwind!</h1>
+    </div>
+  );
+  
+  /*<HomePage
+  step={step}
+  personalityMode={personalityMode}
+  selectPersonalityMode={selectPersonalityMode}
+  scenario={scenario}
+  analysis={analysis}
+  theme={theme}
+  setTheme={setTheme}
+  generateScenario={generateScenario}
+  questionIndex={questionIndex}
+  selectChoice={selectChoice}  
+  />; */
+    /*
     <div style={{ padding: "20px", fontFamily: "Arial", textAlign: "center" }}>
       <h1>AI Personality Quiz</h1>
 
-      {/* Personality Selection */}
+      {/* Personality Selection }
       {step === 1 && !personalityMode && (
         <div>
           <p>Choose how the AI should analyze your personality:</p>
@@ -112,7 +131,7 @@ function App() {
         </div>
       )}
 
-      {/* Theme Selection */}
+      {/* Theme Selection }
       {step === 2 && personalityMode && !scenario && !analysis && (
         <div>
           <p>Enter a theme for your quiz (e.g., space, medieval, cooking):</p>
@@ -126,7 +145,7 @@ function App() {
         </div>
       )}
 
-      {/* Scenario Display */}
+      {/* Scenario Display }
       {step === 3 && (
         <div>
           <h3>Scenario {questionIndex + 1}:</h3>
@@ -136,7 +155,7 @@ function App() {
         </div>
       )}
 
-      {/* Personality Analysis */}
+      {/* Personality Analysis }
       {step === 4 && analysis && (
         <div>
           <h3>Your Personality Analysis:</h3>
@@ -144,7 +163,7 @@ function App() {
         </div>
       )}
     </div>
-  );
+  ); */
 }
 
 export default App;
