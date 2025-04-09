@@ -1,17 +1,18 @@
 import React, { useState } from "react";
 import axios from "axios";
-import HomePage from "./components/HomePage";
+import WelcomeScreen from "./components/WelcomeScreen";
 
 function App() {
   // State variables
   const [personalityMode, setPersonalityMode] = useState("");
   const [theme, setTheme] = useState("");
-  const [scenario, setScenario] = useState("");
+  const [scenario, setScenario] = useState(null);
   const [currentChoices, setCurrentChoices] = useState([]);
   const [avoidedChoices, setAvoidedChoices] = useState([]);
   const [analysis, setAnalysis] = useState("");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const totalQuestions = 2; // Adjust the number of questions
 
   // User selects "Be Nice" or "Be Mean"
@@ -28,6 +29,7 @@ function App() {
       return;
     }
     console.log("Sending request to backend:", { themes: theme });
+    setIsLoading(true);
 
     try {
       const response = await axios.post(
@@ -36,6 +38,13 @@ function App() {
         { headers: { "Content-Type": "application/json" } }
       );
       console.log("Generated scenario:", response.data);
+
+      if (response.data.error) {
+        console.error("Backend error:", response.data.error);
+        setIsLoading(false);
+        return;
+      }
+
       setScenario({
         text: response.data.situation,
         choice1: response.data.choice1,
@@ -44,6 +53,8 @@ function App() {
       setStep(3);
     } catch (error) {
       console.error("Error generating scenario:", error.response?.data || error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -62,8 +73,8 @@ function App() {
       // If all questions answered, proceed to analysis
       setScenario(null);
       analyzePersonality();
+      setStep(4);
     }
-    setStep(4);
   };
 
   // Sends choices to FastAPI for personality analysis
@@ -80,90 +91,125 @@ function App() {
       personalityMode: personalityMode,
     });
 
-    setScenario(null); // Hide scenario UI
     setAnalysis("Analyzing your personality...");
 
-    setTimeout(async () => {
-      try {
-        const response = await axios.post("http://127.0.0.1:8000/analyze", {
-          themes: theme,
-          choices: currentChoices,
-          avoided: avoidedChoices,
-          personalityMode: personalityMode,
-        });
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/analyze", {
+        themes: theme,
+        choices: currentChoices,
+        avoided: avoidedChoices,
+        personalityMode: personalityMode,
+      });
 
-        console.log("Received analysis:", response.data.analysis);
-        setAnalysis(response.data.analysis);
-      } catch (error) {
-        console.error("Error analyzing personality:", error.response?.data || error.message);
-      }
-    }, 1000); // Simulated delay for UX
+      console.log("Received analysis:", response.data.analysis);
+      setAnalysis(response.data.analysis);
+    } catch (error) {
+      console.error("Error analyzing personality:", error.response?.data || error.message);
+    }
+    setStep(4);
   };
 
+  const restartQuiz = () => {
+    setPersonalityMode("");
+    setTheme("");
+    setScenario(null);
+    setCurrentChoices([]);
+    setAvoidedChoices([]);
+    setAnalysis("");
+    setQuestionIndex(0);
+    setStep(1);
+    setIsLoading(false);
+  };
+  
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <h1 className="text-3xl font-bold text-blue-500">Hello, Tailwind!</h1>
+    <div>
+      {step === 1 && !personalityMode && (
+        <WelcomeScreen onSelectMode={selectPersonalityMode} />
+      )}
+
+      {step === 2 && personalityMode && !scenario && !analysis && (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
+          <div className="bg-black bg-opacity-50 rounded-lg p-6 max-w-md w-full">
+            <p className="text-lg text-gray-300 mb-4">Enter a theme for your quiz (e.g., space, medieval, cooking):</p>
+            <input
+              type="text"
+              placeholder="Enter a theme"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              className="w-full p-2 bg-gray-800 text-white border border-gray-600 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={generateScenario}
+              disabled={!theme.trim()}
+              className="relative w-full px-4 py-2 bg-black bg-opacity-50 border border-green-500 text-white rounded-lg 
+                         hover:bg-green-500 hover:bg-opacity-20 transition-all duration-300 
+                         shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:shadow-[0_0_25px_rgba(34,197,94,0.8)] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Start Quiz
+              <span className="absolute top-0 left-0 w-full h-full border border-green-500 rounded-lg opacity-50 blur-sm"></span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && scenario && scenario.text && scenario.choice1 && scenario.choice2 ? (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
+          <div className="relative bg-black bg-opacity-50 rounded-3xl p-6 max-w-md w-full">
+            {/* Loading Overlay */}
+            {isLoading && (
+              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg">
+                <p className="text-gray-400">Loading scenario...</p>
+              </div>
+            )}
+            <h3 className="text-xl font-semibold text-gray-200 mb-2">Scenario {questionIndex + 1}:</h3>
+            <p className="text-gray-300 mb-4">{scenario.text}</p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => selectChoice(scenario.choice1)}
+                className="relative px-4 py-2 bg-black bg-opacity-50 border border-indigo-500 text-white rounded-lg 
+                           hover:bg-indigo-500 hover:bg-opacity-20 transition-all duration-300 
+                           shadow-[0_0_15px_rgba(99,102,241,0.5)] hover:shadow-[0_0_25px_rgba(99,102,241,0.8)]"
+              >
+                {scenario.choice1}
+                <span className="absolute top-0 left-0 w-full h-full border border-indigo-500 rounded-lg opacity-50 blur-sm"></span>
+              </button>
+              <button
+                onClick={() => selectChoice(scenario.choice2)}
+                className="relative px-4 py-2 bg-black bg-opacity-50 border border-indigo-500 text-white rounded-lg 
+                           hover:bg-indigo-500 hover:bg-opacity-20 transition-all duration-300 
+                           shadow-[0_0_15px_rgba(99,102,241,0.5)] hover:shadow-[0_0_25px_rgba(99,102,241,0.8)]"
+              >
+                {scenario.choice2}
+                <span className="absolute top-0 left-0 w-full h-full border border-indigo-500 rounded-lg opacity-50 blur-sm"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : step === 3 ? (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
+          <p className="text-gray-400">Loading scenario...</p>
+        </div>
+      ) : null}
+
+      {step === 4 && analysis && (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
+          <div className="bg-white bg-opacity-50 rounded-3xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-semibold text-gray-200 mb-2">Your Personality Analysis</h3>
+            <p className="text-gray-300">{analysis}</p>
+            <button
+              onClick={restartQuiz}
+              className="relative w-full px-4 py-2 bg-black bg-opacity-50 border border-purple-500 text-white rounded-lg 
+                         hover:bg-purple-500 hover:bg-opacity-20 transition-all duration-300 
+                         shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:shadow-[0_0_25px_rgba(168,85,247,0.8)]"
+            >
+              Restart Quiz
+              <span className="absolute top-0 left-0 w-full h-full border border-purple-500 rounded-lg opacity-50 blur-sm"></span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
-  
-  /*<HomePage
-  step={step}
-  personalityMode={personalityMode}
-  selectPersonalityMode={selectPersonalityMode}
-  scenario={scenario}
-  analysis={analysis}
-  theme={theme}
-  setTheme={setTheme}
-  generateScenario={generateScenario}
-  questionIndex={questionIndex}
-  selectChoice={selectChoice}  
-  />; */
-    /*
-    <div style={{ padding: "20px", fontFamily: "Arial", textAlign: "center" }}>
-      <h1>AI Personality Quiz</h1>
-
-      {/* Personality Selection }
-      {step === 1 && !personalityMode && (
-        <div>
-          <p>Choose how the AI should analyze your personality:</p>
-          <button onClick={() => selectPersonalityMode("nice")}>Be Nice</button>
-          <button onClick={() => selectPersonalityMode("mean")}>Be Mean</button>
-        </div>
-      )}
-
-      {/* Theme Selection }
-      {step === 2 && personalityMode && !scenario && !analysis && (
-        <div>
-          <p>Enter a theme for your quiz (e.g., space, medieval, cooking):</p>
-          <input
-            type="text"
-            placeholder="Enter a theme"
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-          />
-          <button onClick={generateScenario} disabled={!theme.trim()}>Start Quiz</button>
-        </div>
-      )}
-
-      {/* Scenario Display }
-      {step === 3 && (
-        <div>
-          <h3>Scenario {questionIndex + 1}:</h3>
-          <p>{scenario.text}</p>
-          <button onClick={() => selectChoice(scenario.choice1)}>{scenario.choice1}</button>
-          <button onClick={() => selectChoice(scenario.choice2)}>{scenario.choice2}</button>
-        </div>
-      )}
-
-      {/* Personality Analysis }
-      {step === 4 && analysis && (
-        <div>
-          <h3>Your Personality Analysis:</h3>
-          <p>{analysis}</p>
-        </div>
-      )}
-    </div>
-  ); */
 }
 
 export default App;
