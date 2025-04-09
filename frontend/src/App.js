@@ -13,6 +13,7 @@ function App() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const maxThemeLength = 100;
   const totalQuestions = 3; // Adjust the number of questions
 
   // User selects "Be Nice" or "Be Mean"
@@ -20,6 +21,13 @@ function App() {
     console.log("Personality mode selected:", mode);
     setPersonalityMode(mode);
     setStep(2);
+  };
+
+  const handleThemeChange = (e) => {
+    const newTheme = e.target.value;
+    if (newTheme.length <= maxThemeLength) {
+      setTheme(newTheme);
+    }
   };
 
   // Generates a scenario from the backend
@@ -135,9 +143,13 @@ function App() {
               type="text"
               placeholder="Enter a theme"
               value={theme}
-              onChange={(e) => setTheme(e.target.value)}
+              onChange={handleThemeChange}
+              maxLength={maxThemeLength}
               className="w-full p-2 bg-gray-800 text-white border border-gray-600 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <p className="text-sm text-gray-400 mb-4">
+              {theme.length}/{maxThemeLength} characters
+            </p>
             <button
               onClick={generateScenario}
               disabled={!theme.trim()}
