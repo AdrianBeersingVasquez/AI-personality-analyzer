@@ -10,7 +10,7 @@ const WelcomeScreen = ({ onSelectMode }) => {
       <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
         <button
           onClick={() => onSelectMode("nice")}
-          className="relative w-full px-6 py-3 bg-black bg-opacity-50 border border-blue-500 text-white rounded-lg 
+          className="relative w-full px-6 py-3 bg-blue-500/10 border border-blue-500 text-white rounded-lg 
                      hover:bg-blue-500 hover:bg-opacity-20 transition-all duration-300 
                      shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:shadow-[0_0_25px_rgba(59,130,246,0.8)]"
         >
@@ -19,7 +19,7 @@ const WelcomeScreen = ({ onSelectMode }) => {
         </button>
         <button
           onClick={() => onSelectMode("mean")}
-          className="relative w-full px-6 py-3 bg-black bg-opacity-50 border border-orange-500 text-white rounded-lg 
+          className="relative w-full px-6 py-3 bg-orange-500/10 border border-orange-500 text-white rounded-lg 
                      hover:bg-orange-500 hover:bg-opacity-20 transition-all duration-300 
                      shadow-[0_0_15px_rgba(249,115,22,0.5)] hover:shadow-[0_0_25px_rgba(249,115,22,0.8)]"
         >

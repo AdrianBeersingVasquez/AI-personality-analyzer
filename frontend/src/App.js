@@ -13,7 +13,7 @@ function App() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const totalQuestions = 2; // Adjust the number of questions
+  const totalQuestions = 3; // Adjust the number of questions
 
   // User selects "Be Nice" or "Be Mean"
   const selectPersonalityMode = (mode) => {
@@ -129,7 +129,7 @@ function App() {
 
       {step === 2 && personalityMode && !scenario && !analysis && (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
-          <div className="bg-black bg-opacity-50 rounded-lg p-6 max-w-md w-full">
+          <div className="bg-white/10 rounded-lg p-6 max-w-md w-full">
             <p className="text-lg text-gray-300 mb-4">Enter a theme for your quiz (e.g., space, medieval, cooking):</p>
             <input
               type="text"
@@ -141,7 +141,7 @@ function App() {
             <button
               onClick={generateScenario}
               disabled={!theme.trim()}
-              className="relative w-full px-4 py-2 bg-black bg-opacity-50 border border-green-500 text-white rounded-lg 
+              className="relative w-full px-4 py-2 bg-green-500/10 border border-green-500 text-white rounded-lg 
                          hover:bg-green-500 hover:bg-opacity-20 transition-all duration-300 
                          shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:shadow-[0_0_25px_rgba(34,197,94,0.8)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -154,10 +154,10 @@ function App() {
 
       {step === 3 && scenario && scenario.text && scenario.choice1 && scenario.choice2 ? (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
-          <div className="relative bg-black bg-opacity-50 rounded-3xl p-6 max-w-md w-full">
+          <div className="relative bg-white/10 rounded-lg p-6 max-w-md w-full">
             {/* Loading Overlay */}
             {isLoading && (
-              <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center rounded-lg">
+              <div className="bg-whie/10 flex items-start justify-start rounded-lg">
                 <p className="text-gray-400">Loading scenario...</p>
               </div>
             )}
@@ -166,7 +166,7 @@ function App() {
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => selectChoice(scenario.choice1)}
-                className="relative px-4 py-2 bg-black bg-opacity-50 border border-indigo-500 text-white rounded-lg 
+                className="relative px-4 py-2 bg-indigo-500/20 border border-indigo-500 text-white rounded-lg 
                            hover:bg-indigo-500 hover:bg-opacity-20 transition-all duration-300 
                            shadow-[0_0_15px_rgba(99,102,241,0.5)] hover:shadow-[0_0_25px_rgba(99,102,241,0.8)]"
               >
@@ -175,7 +175,7 @@ function App() {
               </button>
               <button
                 onClick={() => selectChoice(scenario.choice2)}
-                className="relative px-4 py-2 bg-black bg-opacity-50 border border-indigo-500 text-white rounded-lg 
+                className="relative px-4 py-2 bg-indigo-500/20 border border-indigo-500 text-white rounded-lg 
                            hover:bg-indigo-500 hover:bg-opacity-20 transition-all duration-300 
                            shadow-[0_0_15px_rgba(99,102,241,0.5)] hover:shadow-[0_0_25px_rgba(99,102,241,0.8)]"
               >
@@ -193,12 +193,12 @@ function App() {
 
       {step === 4 && analysis && (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
-          <div className="bg-white bg-opacity-50 rounded-3xl p-6 max-w-md w-full">
+          <div className="bg-white/10 rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-semibold text-gray-200 mb-2">Your Personality Analysis</h3>
-            <p className="text-gray-300">{analysis}</p>
+            <p className="text-gray-300 mb-8">{analysis}</p>
             <button
               onClick={restartQuiz}
-              className="relative w-full px-4 py-2 bg-black bg-opacity-50 border border-purple-500 text-white rounded-lg 
+              className="relative w-full px-4 py-2 bg-purple-500/20 border border-purple-500 text-white rounded-lg 
                          hover:bg-purple-500 hover:bg-opacity-20 transition-all duration-300 
                          shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:shadow-[0_0_25px_rgba(168,85,247,0.8)]"
             >
