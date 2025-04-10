@@ -13,6 +13,7 @@ function App() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
   const maxThemeLength = 100;
   const totalQuestions = 3; // Adjust the number of questions
 
@@ -113,6 +114,7 @@ function App() {
     });
 
     setAnalysis("Analyzing your personality...");
+    setIsAnalysisLoading(true);
 
     try {
       const response = await axios.post("http://127.0.0.1:8000/analyze", {
@@ -124,8 +126,11 @@ function App() {
 
       console.log("Received analysis:", response.data.analysis);
       setAnalysis(response.data.analysis);
+
     } catch (error) {
       console.error("Error analyzing personality:", error.response?.data || error.message);
+    } finally {
+      setIsAnalysisLoading(false);
     }
     setStep(4);
   };
@@ -216,12 +221,13 @@ function App() {
         </div>
       ) : null}
 
-      {step === 4 && analysis && !isLoading && (
+      {step === 4 && analysis && (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
           <div className="bg-white/10 rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-semibold text-gray-200 mb-2">Your Personality Analysis</h3>
             <p className="text-gray-300 mb-8">{analysis}</p>
-            <button
+            {!isAnalysisLoading && analysis !== "Analyzing your personality..." && (
+              <button
               onClick={restartQuiz}
               className="relative w-full px-4 py-2 bg-purple-500/20 border border-purple-500 text-white rounded-lg 
                          hover:bg-purple-500/90 transition-all duration-300 
@@ -230,6 +236,7 @@ function App() {
               Another Round of Dilemmas?
               <span className="absolute top-0 left-0 w-full h-full border border-purple-500 rounded-lg opacity-50 blur-sm"></span>
             </button>
+            )}
           </div>
         </div>
       )}
