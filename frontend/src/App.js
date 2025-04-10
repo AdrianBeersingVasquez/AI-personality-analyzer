@@ -85,6 +85,19 @@ function App() {
     }
   };
 
+  const saveResponse = async (theme, analysis) => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/save_response",
+        { theme, analysis },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      console.log("Response saved:", response.data);
+    } catch (error) {
+      console.error("Error saving response:", error.response?.data || error.message);
+    }
+  };
+
   // Sends choices to FastAPI for personality analysis
   const analyzePersonality = async () => {
     if (!personalityMode || !theme.trim() || currentChoices.length === 0) {
@@ -138,7 +151,7 @@ function App() {
       {step === 2 && personalityMode && !scenario && !analysis && (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
           <div className="bg-white/10 rounded-lg p-6 max-w-md w-full">
-            <p className="text-lg text-gray-300 mb-4">Enter a theme for your quiz (e.g., space, medieval, cooking):</p>
+            <p className="text-lg text-gray-300 mb-4">Choose the kind of dilemmas you want to explore</p>
             <input
               type="text"
               placeholder="Enter a theme"
@@ -154,10 +167,10 @@ function App() {
               onClick={generateScenario}
               disabled={!theme.trim()}
               className="relative w-full px-4 py-2 bg-green-500/10 border border-green-500 text-white rounded-lg 
-                         hover:bg-green-500 hover:bg-opacity-20 transition-all duration-300 
+                         hover:bg-green-500/90 transition-all duration-300 
                          shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:shadow-[0_0_25px_rgba(34,197,94,0.8)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Start Quiz
+              Generate Scenarios
               <span className="absolute top-0 left-0 w-full h-full border border-green-500 rounded-lg opacity-50 blur-sm"></span>
             </button>
           </div>
@@ -173,7 +186,7 @@ function App() {
                 <p className="text-gray-400">Loading scenario...</p>
               </div>
             )}
-            <h3 className="text-xl font-semibold text-gray-200 mb-2">Scenario {questionIndex + 1}:</h3>
+            <h3 className="text-xl font-semibold text-gray-200 mb-2">Scenario {questionIndex + 1}</h3>
             <p className="text-gray-300 mb-4">{scenario.text}</p>
             <div className="flex flex-col gap-2">
               <button
@@ -203,7 +216,7 @@ function App() {
         </div>
       ) : null}
 
-      {step === 4 && analysis && (
+      {step === 4 && analysis && !isLoading && (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-orange-900 flex items-center justify-center p-4">
           <div className="bg-white/10 rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-semibold text-gray-200 mb-2">Your Personality Analysis</h3>
@@ -211,10 +224,10 @@ function App() {
             <button
               onClick={restartQuiz}
               className="relative w-full px-4 py-2 bg-purple-500/20 border border-purple-500 text-white rounded-lg 
-                         hover:bg-purple-500 hover:bg-opacity-20 transition-all duration-300 
+                         hover:bg-purple-500/90 transition-all duration-300 
                          shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:shadow-[0_0_25px_rgba(168,85,247,0.8)]"
             >
-              Restart Quiz
+              Another Round of Dilemmas?
               <span className="absolute top-0 left-0 w-full h-full border border-purple-500 rounded-lg opacity-50 blur-sm"></span>
             </button>
           </div>

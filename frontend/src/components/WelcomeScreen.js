@@ -11,16 +11,16 @@ const WelcomeScreen = ({ onSelectMode }) => {
         <button
           onClick={() => onSelectMode("nice")}
           className="relative w-full px-6 py-3 bg-blue-500/10 border border-blue-500 text-white rounded-lg 
-                     hover:bg-blue-500 hover:bg-opacity-20 transition-all duration-300 
+                     hover:bg-blue-500/90 transition-all duration-300 
                      shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:shadow-[0_0_25px_rgba(59,130,246,0.8)]"
         >
-          Play nice 😇
+          Play nice 🐶
           <span className="absolute top-0 left-0 w-full h-full border border-blue-500 rounded-lg opacity-50 blur-sm"></span>
         </button>
         <button
           onClick={() => onSelectMode("mean")}
           className="relative w-full px-6 py-3 bg-orange-500/10 border border-orange-500 text-white rounded-lg 
-                     hover:bg-orange-500 hover:bg-opacity-20 transition-all duration-300 
+                     hover:bg-orange-500/90 transition-all duration-300 
                      shadow-[0_0_15px_rgba(249,115,22,0.5)] hover:shadow-[0_0_25px_rgba(249,115,22,0.8)]"
         >
           Roast me 🍗

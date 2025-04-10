@@ -23,6 +23,8 @@
     --color-white: #fff;
     --spacing: 0.25rem;
     --container-md: 28rem;
+    --text-sm: 0.875rem;
+    --text-sm--line-height: calc(1.25 / 0.875);
     --text-lg: 1.125rem;
     --text-lg--line-height: calc(1.75 / 1.125);
     --text-xl: 1.25rem;
@@ -357,6 +359,10 @@
     font-size: var(--text-lg);
     line-height: var(--tw-leading, var(--text-lg--line-height));
   }
+  .text-sm {
+    font-size: var(--text-sm);
+    line-height: var(--tw-leading, var(--text-sm--line-height));
+  }
   .text-xl {
     font-size: var(--text-xl);
     line-height: var(--tw-leading, var(--text-xl--line-height));
@@ -417,17 +423,23 @@
     --tw-duration: 300ms;
     transition-duration: 300ms;
   }
-  .hover\:bg-blue-500 {
+  .hover\:bg-blue-500\/90 {
     &:hover {
       @media (hover: hover) {
-        background-color: var(--color-blue-500);
+        background-color: color-mix(in srgb, oklch(62.3% 0.214 259.815) 90%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          background-color: color-mix(in oklab, var(--color-blue-500) 90%, transparent);
+        }
       }
     }
   }
-  .hover\:bg-green-500 {
+  .hover\:bg-green-500\/90 {
     &:hover {
       @media (hover: hover) {
-        background-color: var(--color-green-500);
+        background-color: color-mix(in srgb, oklch(72.3% 0.219 149.579) 90%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          background-color: color-mix(in oklab, var(--color-green-500) 90%, transparent);
+        }
       }
     }
   }
@@ -438,17 +450,23 @@
       }
     }
   }
-  .hover\:bg-orange-500 {
+  .hover\:bg-orange-500\/90 {
     &:hover {
       @media (hover: hover) {
-        background-color: var(--color-orange-500);
+        background-color: color-mix(in srgb, oklch(70.5% 0.213 47.604) 90%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          background-color: color-mix(in oklab, var(--color-orange-500) 90%, transparent);
+        }
       }
     }
   }
-  .hover\:bg-purple-500 {
+  .hover\:bg-purple-500\/90 {
     &:hover {
       @media (hover: hover) {
-        background-color: var(--color-purple-500);
+        background-color: color-mix(in srgb, oklch(62.7% 0.265 303.9) 90%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          background-color: color-mix(in oklab, var(--color-purple-500) 90%, transparent);
+        }
       }
     }
   }
