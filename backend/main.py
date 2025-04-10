@@ -1,11 +1,13 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import google.generativeai as genai
 import os
 import re
 from dotenv import load_dotenv
 import logging
+import sqlite3
+from datetime import datetime
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -175,6 +177,17 @@ async def save_response(req: SaveResponseRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving response: {str(e)}")
 
-
+# Retrieve all saved responses
+@app.get("/responses")
+async def get_responses():
+    try:
+        conn = sqlite3.connect("user_responses.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT theme, analysis, timestamp FROM user_responses ORDER BY timestamp DESC")
+        rows = cursor.fetchall()
+        conn.close()
+        return [{"theme": row[0], "analysis": row[1], "timestamp": row[2]} for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving responses: {str(e)}")
 
 # Run the API with: uvicorn backend.main:app --reload
