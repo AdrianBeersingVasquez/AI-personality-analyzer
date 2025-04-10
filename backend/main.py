@@ -161,6 +161,20 @@ async def analyze_personality(req: ThemeRequest):
 
 # Save theme and analysis to the database
 @app.post("/save_response")
-async def save_response(req: )
+async def save_response(req: SaveResponseRequest):
+    try:
+        conn = sqlite3.connect("user_responses.db")
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO user_responses (theme, analysis, timestamp) VALUES (?, ?, ?)",
+            (req.theme, req.analysis, datetime.now().isoformat())
+        )
+        conn.commit()
+        conn.close()
+        return {"message": "Response saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving response: {str(e)}")
+
+
 
 # Run the API with: uvicorn backend.main:app --reload
