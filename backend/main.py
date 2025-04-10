@@ -119,7 +119,7 @@ async def analyze_personality(req: ThemeRequest):
         While this is a list of actions I have avoided: {req.avoided}
         I want you to analyse my personality based on these choices and avoided actions.
         Write 3-4 sentences summarising my personality in a thoughtful and engaging way.
-        In one sentence, state something I am likely to do, or a how I process information.
+        In one sentence, state something I am likely to do, or a how I process information, written in the second person.
         """
 
     else:
