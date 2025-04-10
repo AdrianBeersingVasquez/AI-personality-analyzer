@@ -30,6 +30,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Database setup
+def init_db():
+    conn = sqlite3.connect("user_responses.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_responses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            theme TEXT NOT NULL,
+            analysis TEXT NOT NULL,
+            timestamp TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
 class GenerateRequest(BaseModel):
     themes: str
 
@@ -39,6 +56,10 @@ class ThemeRequest(BaseModel):
     choices: list[str] = []
     avoided: list[str] = []
     personalityMode: str
+
+class SaveResponseRequest(BaseModel):
+    theme: str
+    analysis: str
 
 # Generate scenario & actions
 @app.post("/generate")
@@ -137,5 +158,9 @@ async def analyze_personality(req: ThemeRequest):
     response = model.generate_content(prompt)
 
     return {"analysis": response.text.strip()}
+
+# Save theme and analysis to the database
+@app.post("/save_response")
+async def save_response(req: )
 
 # Run the API with: uvicorn backend.main:app --reload
