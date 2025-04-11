@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# SQLite database files
+user_responses.db
+
 # Distribution / packaging
 .Python
 build/
