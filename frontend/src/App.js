@@ -3,7 +3,6 @@ import axios from "axios";
 import WelcomeScreen from "./components/WelcomeScreen";
 
 function App() {
-  // State variables
   const [personalityMode, setPersonalityMode] = useState("");
   const [theme, setTheme] = useState("");
   const [scenario, setScenario] = useState(null);
@@ -13,9 +12,11 @@ function App() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [themeError, setThemeError] = useState("");
   const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
   const maxThemeLength = 100;
   const totalQuestions = 3; // Adjust the number of questions
+  const validThemeRegex = /^[a-zA-Z0-9\s,.-]*$/;
 
   // User selects "Be Nice" or "Be Mean"
   const selectPersonalityMode = (mode) => {
@@ -28,6 +29,15 @@ function App() {
     const newTheme = e.target.value;
     if (newTheme.length <= maxThemeLength) {
       setTheme(newTheme);
+      console.log("Theme state updated:", newTheme); // Debug log
+      // Validate the theme
+      if (newTheme && !validThemeRegex.test(newTheme)) {
+        setThemeError("Theme can only contain letters, numbers, spaces, commas, periods, and hyphens.");
+        console.log("Theme validation failed:", newTheme); // Debug log
+      } else {
+        setThemeError("");
+        console.log("Theme validation passed:", newTheme); // Debug log
+      }
     }
   };
 
@@ -35,6 +45,13 @@ function App() {
   const generateScenario = async () => {
     if (!theme.trim()) {
       console.error("Theme is empty! Cannot generate scenario.");
+      setThemeError("Theme cannot be empty.");
+      return;
+    }
+
+    if (!validThemeRegex.test(theme)) {
+      console.error("Invalid theme characters:", theme);
+      setThemeError("Theme can only contain letters, numbers, spaces, commas, periods, and hyphens.");
       return;
     }
     console.log("Sending request to backend:", { themes: theme });
@@ -74,12 +91,11 @@ function App() {
     setCurrentChoices([...currentChoices, choiceText]);
     setAvoidedChoices([...avoidedChoices, avoidedChoice]);
 
-    // If more questions remain, fetch the next scenario
+    // If more questions remain, fetch the next scenario, otherwise analyse personality
     if (questionIndex + 1 < totalQuestions) {
       setQuestionIndex(questionIndex + 1);
       generateScenario();
     } else {
-      // If all questions answered, proceed to analysis
       setScenario(null);
       analyzePersonality();
       setStep(4);
@@ -103,6 +119,7 @@ function App() {
   const analyzePersonality = async () => {
     if (!personalityMode || !theme.trim() || currentChoices.length === 0) {
       console.error("Missing required data for personality analysis!");
+      setAnalysis("Error: Missing required data for analysis.");
       return;
     }
 
@@ -127,12 +144,16 @@ function App() {
       console.log("Received analysis:", response.data.analysis);
       setAnalysis(response.data.analysis);
 
+      const analysisResult = response.data.analysis || "No analysis returned from the server.";
+      setAnalysis(analysisResult);
+      await saveResponse(theme, analysisResult);
     } catch (error) {
       console.error("Error analyzing personality:", error.response?.data || error.message);
+      setAnalysis("Error: Could not analyze personality. Please try again.");
     } finally {
       setIsAnalysisLoading(false);
     }
-    setStep(4);
+    //setStep(4);
   };
 
   const restartQuiz = () => {
@@ -145,6 +166,7 @@ function App() {
     setQuestionIndex(0);
     setStep(1);
     setIsLoading(false);
+    setThemeError("");
   };
   
   return (
@@ -168,6 +190,9 @@ function App() {
             <p className="text-sm text-gray-400 mb-4">
               {theme.length}/{maxThemeLength} characters
             </p>
+            {themeError && (
+              <p className="text-sm text-red-400 mb-2">{themeError}</p>
+            )}
             <button
               onClick={generateScenario}
               disabled={!theme.trim()}

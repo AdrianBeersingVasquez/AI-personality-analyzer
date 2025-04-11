@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import logging
 import sqlite3
 from datetime import datetime
+import html
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 # Load API Key from .env
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+DATABASE_PATH = os.getenv("DATABASE_PATH", "user_responses.db")
 
 # Configure Gemini API
 genai.configure(api_key=GEMINI_API_KEY)
@@ -34,6 +36,7 @@ app.add_middleware(
 
 # Database setup
 def init_db():
+    logger.debug(f"Initializing database at {DATABASE_PATH}")
     conn = sqlite3.connect("user_responses.db")
     cursor = conn.cursor()
     cursor.execute("""
@@ -46,6 +49,7 @@ def init_db():
     """)
     conn.commit()
     conn.close()
+    logger.debug("Database initialized successfully")
 
 init_db()
 
@@ -63,13 +67,23 @@ class SaveResponseRequest(BaseModel):
     theme: str
     analysis: str
 
+# Regular expression to validate theme
+VALID_THEME_REGEX = r"^[a-zA-Z0-9\s,.-]+$"
+
+def validate_theme(theme: str) -> bool:
+    return bool(re.match(VALID_THEME_REGEX, theme))
+
 # Generate scenario & actions
 @app.post("/generate")
 async def generate_scenario(req: GenerateRequest):
-    logger.debug(f"Received request: {req}")  # Ensure this is logged
-    print(f"Received request: {req}")  # Also use print() for extra visibility
-
+    logger.debug(f"Received request: {req}")
     print("Received request:", req.themes)  # Debugging
+
+    if not validate_theme(req.themes):
+        logger.error(f"Theme validation failed: {req.themes}")
+        raise HTTPException(status_code=400, detail="Theme can only contain letters, numbers, spaces, commas, periods, and hyphens.")
+
+    print("Received request:", req.themes)
 
     prompt = f"""
     Pick ONE of the following themes: {req.themes}.
@@ -135,6 +149,11 @@ async def analyze_personality(req: ThemeRequest):
     print("Received choices from frontend:", req.choices)  # Debug log
     print("Received avoided choices from frontend:", req.avoided)
     
+    # Validate theme
+    if not validate_theme(req.themes):
+        logger.error(f"Theme validation failed: {req.themes}")
+        raise HTTPException(status_code=400, detail="Theme can only contain letters, numbers, spaces, commas, periods, and hyphens.")
+
     if req.personalityMode == "nice":
         prompt = f"""
         This is a list of actions I have chosen to take: {req.choices}
@@ -164,30 +183,47 @@ async def analyze_personality(req: ThemeRequest):
 # Save theme and analysis to the database
 @app.post("/save_response")
 async def save_response(req: SaveResponseRequest):
+    logger.debug(f"Received save_response request: {req.dict()}")
+    # Validate and sanitize theme
+    if not validate_theme(req.theme):
+        logger.error(f"Theme validation failed: {req.theme}")
+        raise HTTPException(status_code=400, detail="Theme can only contain letters, numbers, spaces, commas, periods, and hyphens.")
+
+    # Escape theme and analysis to prevent injection
+    sanitized_theme = html.escape(req.theme)
+    sanitized_analysis = html.escape(req.analysis)
+    logger.debug(f"Sanitized theme: {sanitized_theme}, Sanitized analysis: {sanitized_analysis}")
+
     try:
-        conn = sqlite3.connect("user_responses.db")
+        logger.debug(f"Connecting to database at {DATABASE_PATH}")
+        conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
+        logger.debug("Executing INSERT query")
         cursor.execute(
             "INSERT INTO user_responses (theme, analysis, timestamp) VALUES (?, ?, ?)",
-            (req.theme, req.analysis, datetime.now().isoformat())
+            (sanitized_theme, sanitized_analysis, datetime.now().isoformat())
         )
+        logger.debug("Committing transaction")
         conn.commit()
+        logger.debug("Database transaction committed successfully")
         conn.close()
         return {"message": "Response saved successfully"}
     except Exception as e:
+        logger.error(f"Error saving to database: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error saving response: {str(e)}")
 
 # Retrieve all saved responses
 @app.get("/responses")
 async def get_responses():
     try:
-        conn = sqlite3.connect("user_responses.db")
+        conn = sqlite3.connect("DATABASE_PATH")
         cursor = conn.cursor()
         cursor.execute("SELECT theme, analysis, timestamp FROM user_responses ORDER BY timestamp DESC")
         rows = cursor.fetchall()
         conn.close()
         return [{"theme": row[0], "analysis": row[1], "timestamp": row[2]} for row in rows]
     except Exception as e:
+        logger.error(f"Error retrieving responses: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error retrieving responses: {str(e)}")
 
 # Run the API with: uvicorn backend.main:app --reload
