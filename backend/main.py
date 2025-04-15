@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 # Load API Key from .env
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    logger.error("GEMINI_API_KEY environment variable is missing")
+    raise ValueError("GEMINI_API_KEY environment variable is missing")
+
 # DATABASE_PATH = os.getenv("DATABASE_PATH", "user_responses.db")
 DB_CONFIG = {
     "dbname": os.getenv("DB_NAME", "personality_quiz"),
