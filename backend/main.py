@@ -25,11 +25,17 @@ if not GEMINI_API_KEY:
 # DATABASE_PATH = os.getenv("DATABASE_PATH", "user_responses.db")
 DB_CONFIG = {
     "dbname": os.getenv("DB_NAME", "personality_quiz"),
-    "user": os.getenv("DB_USER", "postgres"),
+    "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PASSWORD"),
-    "host": os.getenv("DB_HOST", "localhost"),
+    "host": os.getenv("DB_HOST"),
     "port": os.getenv("DB_PORT", "5432")
 }
+
+required_db_vars = ["DB_USER", "DB_PASSWORD", "DB_HOST"]
+missing_vars = [var for var in required_db_vars if not DB_CONFIG[var.lower()]]
+if missing_vars:
+    logger.error(f"Missing required database environment variables: {missing_vars}")
+    raise ValueError(f"Missing required database environment variables: {missing_vars}")
 
 # Configure Gemini API
 genai.configure(api_key=GEMINI_API_KEY)
