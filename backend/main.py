@@ -6,7 +6,7 @@ import os
 import re
 from dotenv import load_dotenv
 import logging
-import sqlite3
+import psycopg2
 from datetime import datetime
 import html
 
@@ -16,9 +16,16 @@ logger = logging.getLogger(__name__)
 
 
 # Load API Key from .env
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-DATABASE_PATH = os.getenv("DATABASE_PATH", "user_responses.db")
+# DATABASE_PATH = os.getenv("DATABASE_PATH", "user_responses.db")
+DB_CONFIG = {
+    "dbname": os.getenv("DB_NAME", "personality_quiz"),
+    "user": os.getenv("DB_USER", "postgres"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": os.getenv("DB_PORT", "5432")
+}
 
 # Configure Gemini API
 genai.configure(api_key=GEMINI_API_KEY)
@@ -35,23 +42,14 @@ app.add_middleware(
 )
 
 # Database setup
-def init_db():
-    logger.debug(f"Initializing database at {DATABASE_PATH}")
-    conn = sqlite3.connect("user_responses.db")
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_responses (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            theme TEXT NOT NULL,
-            analysis TEXT NOT NULL,
-            timestamp TEXT NOT NULL
-        )
-    """)
-    conn.commit()
-    conn.close()
-    logger.debug("Database initialized successfully")
-
-init_db()
+def get_db_connection():
+    try: 
+        conn = psycopg2.connect(**DB_CONFIG)
+        logger.debug("Successfully connected to PostgreSQL database")
+        return conn
+    except Exception as e:
+        logger.error(f"Error connecting to database: {str(e)}")
+        raise Exception(f"Error connecting to database: {str(e)}")
 
 class GenerateRequest(BaseModel):
     themes: str
@@ -66,6 +64,7 @@ class ThemeRequest(BaseModel):
 class SaveResponseRequest(BaseModel):
     theme: str
     analysis: str
+    personality_mode: str
 
 # Regular expression to validate theme
 VALID_THEME_REGEX = r"^[a-zA-Z0-9\s,.-]+$"
@@ -192,38 +191,45 @@ async def save_response(req: SaveResponseRequest):
     # Escape theme and analysis to prevent injection
     sanitized_theme = html.escape(req.theme)
     sanitized_analysis = html.escape(req.analysis)
+    sanitized_personality_mode = html.escape(req.personality_mode)
     logger.debug(f"Sanitized theme: {sanitized_theme}, Sanitized analysis: {sanitized_analysis}")
 
     try:
-        logger.debug(f"Connecting to database at {DATABASE_PATH}")
-        conn = sqlite3.connect(DATABASE_PATH)
+        conn = get_db_connection()
         cursor = conn.cursor()
         logger.debug("Executing INSERT query")
         cursor.execute(
-            "INSERT INTO user_responses (theme, analysis, timestamp) VALUES (?, ?, ?)",
-            (sanitized_theme, sanitized_analysis, datetime.now().isoformat())
+            "INSERT INTO responses (theme, analysis, personality_mode) VALUES (%s, %s, %s) RETURNING id",
+            (sanitized_theme, sanitized_analysis, sanitized_personality_mode)
         )
-        logger.debug("Committing transaction")
+        response_id = cursor.fetchone()[0]
         conn.commit()
         logger.debug("Database transaction committed successfully")
-        conn.close()
-        return {"message": "Response saved successfully"}
+        return {"message": f"Response saved with ID {response_id}"}
     except Exception as e:
         logger.error(f"Error saving to database: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error saving response: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 # Retrieve all saved responses
 @app.get("/responses")
 async def get_responses():
     try:
-        conn = sqlite3.connect("DATABASE_PATH")
+        conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT theme, analysis, timestamp FROM user_responses ORDER BY timestamp DESC")
-        rows = cursor.fetchall()
-        conn.close()
-        return [{"theme": row[0], "analysis": row[1], "timestamp": row[2]} for row in rows]
+        cursor.execute("SELECT id, theme, analysis, personality_mode, timestamp FROM responses ORDER BY created_at DESC")
+        responses = cursor.fetchall()
+        return [
+            {"id": row[0], "theme": row[1], "analysis": row[2], "personality_mode": row[3], "created_at": row[4]}
+            for row in responses
+        ]
     except Exception as e:
         logger.error(f"Error retrieving responses: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error retrieving responses: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 # Run the API with: uvicorn backend.main:app --reload

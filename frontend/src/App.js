@@ -13,6 +13,7 @@ function App() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [themeError, setThemeError] = useState("");
+  
   const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
   const maxThemeLength = 100;
   const totalQuestions = 3; // Adjust the number of questions
@@ -212,7 +213,7 @@ function App() {
           <div className="relative bg-white/10 rounded-lg p-6 max-w-md w-full">
             {/* Loading Overlay */}
             {isLoading && (
-              <div className="bg-whie/10 flex items-start justify-start rounded-lg">
+              <div className="bg-white/10 flex items-start justify-start rounded-lg">
                 <p className="text-gray-400">Loading scenario...</p>
               </div>
             )}
