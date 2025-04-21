@@ -31,8 +31,8 @@ DB_CONFIG = {
     "port": os.getenv("DB_PORT", "5432")
 }
 
-required_db_vars = ["DB_USER", "DB_PASSWORD", "DB_HOST"]
-missing_vars = [var for var in required_db_vars if not DB_CONFIG[var.lower()]]
+required_db_vars = ["user", "password", "host"]
+missing_vars = [var for var in required_db_vars if not DB_CONFIG[var]]
 if missing_vars:
     logger.error(f"Missing required database environment variables: {missing_vars}")
     raise ValueError(f"Missing required database environment variables: {missing_vars}")
@@ -229,7 +229,7 @@ async def get_responses():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, theme, analysis, personality_mode, timestamp FROM responses ORDER BY created_at DESC")
+        cursor.execute("SELECT id, theme, analysis, personality_mode, created_at FROM responses ORDER BY created_at DESC")
         responses = cursor.fetchall()
         return [
             {"id": row[0], "theme": row[1], "analysis": row[2], "personality_mode": row[3], "created_at": row[4]}
