@@ -82,6 +82,10 @@ VALID_THEME_REGEX = r"^[a-zA-Z0-9\s,.-]+$"
 def validate_theme(theme: str) -> bool:
     return bool(re.match(VALID_THEME_REGEX, theme))
 
+@app.get("/healthcheck")
+async def healthcheck():
+    return {"status": "ok"}
+
 # Generate scenario & actions
 @app.post("/generate")
 async def generate_scenario(req: GenerateRequest):
