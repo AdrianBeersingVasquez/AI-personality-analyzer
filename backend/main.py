@@ -9,6 +9,7 @@ import logging
 import psycopg2
 from datetime import datetime
 import html
+from urllib.parse import urlparse
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -53,13 +54,18 @@ app.add_middleware(
 
 # Database setup
 def get_db_connection():
-    try: 
-        conn = psycopg2.connect(**DB_CONFIG)
-        logger.debug("Successfully connected to PostgreSQL database")
-        return conn
-    except Exception as e:
-        logger.error(f"Error connecting to database: {str(e)}")
-        raise Exception(f"Error connecting to database: {str(e)}")
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise ValueError("DATABASE_URL environment variable is missing")
+    url = urlparse(database_url)
+    conn = psycopg2.connect(
+        database=url.path[1:],
+        user=url.username,
+        password=url.password,
+        host=url.hostname,
+        port=url.port
+    )
+    return conn
 
 class GenerateRequest(BaseModel):
     themes: str
