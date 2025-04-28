@@ -17,26 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 # Load API Key from .env
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
+if os.getenv("FLY_APP_NAME") is None:  # Only load .env if not on Fly.io
+    load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     logger.error("GEMINI_API_KEY environment variable is missing")
     raise ValueError("GEMINI_API_KEY environment variable is missing")
-
-# DATABASE_PATH = os.getenv("DATABASE_PATH", "user_responses.db")
-DB_CONFIG = {
-    "dbname": os.getenv("DB_NAME", "personality_quiz"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "host": os.getenv("DB_HOST"),
-    "port": os.getenv("DB_PORT", "5432")
-}
-
-required_db_vars = ["user", "password", "host"]
-missing_vars = [var for var in required_db_vars if not DB_CONFIG[var]]
-if missing_vars:
-    logger.error(f"Missing required database environment variables: {missing_vars}")
-    raise ValueError(f"Missing required database environment variables: {missing_vars}")
 
 # Configure Gemini API
 genai.configure(api_key=GEMINI_API_KEY)
@@ -46,7 +33,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins (for development)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -89,7 +76,7 @@ def validate_theme(theme: str) -> bool:
     return bool(re.match(VALID_THEME_REGEX, theme))
 
 @app.get("/healthcheck")
-async def healthcheck():
+async def healthcheck():    
     return {"status": "ok"}
 
 # Generate scenario & actions
