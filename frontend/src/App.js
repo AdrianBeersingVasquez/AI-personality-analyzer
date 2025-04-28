@@ -60,7 +60,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/generate",
+        "http://ai-personality-analyzer.fly.dev/generate",
         { themes: theme },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -106,7 +106,7 @@ function App() {
   const saveResponse = async (theme, analysis) => {
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/save_response",
+        "http://ai-personality-analyzer.fly.dev/save_response",
         { theme, analysis },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -135,7 +135,7 @@ function App() {
     setIsAnalysisLoading(true);
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/analyze", {
+      const response = await axios.post("http://ai-personality-analyzer.fly.dev/analyze", {
         themes: theme,
         choices: currentChoices,
         avoided: avoidedChoices,
