@@ -60,7 +60,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        "http://ai-personality-analyzer.fly.dev/generate",
+        "https://ai-personality-analyzer.fly.dev/generate",
         { themes: theme },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -103,11 +103,11 @@ function App() {
     }
   };
 
-  const saveResponse = async (theme, analysis) => {
+  const saveResponse = async (theme, analysis, personalityMode) => {
     try {
       const response = await axios.post(
-        "http://ai-personality-analyzer.fly.dev/save_response",
-        { theme, analysis },
+        "https://ai-personality-analyzer.fly.dev/save_response",
+        { theme, analysis, personality_mode: personalityMode },
         { headers: { "Content-Type": "application/json" } }
       );
       console.log("Response saved:", response.data);
@@ -135,7 +135,7 @@ function App() {
     setIsAnalysisLoading(true);
 
     try {
-      const response = await axios.post("http://ai-personality-analyzer.fly.dev/analyze", {
+      const response = await axios.post("https://ai-personality-analyzer.fly.dev/analyze", {
         themes: theme,
         choices: currentChoices,
         avoided: avoidedChoices,
@@ -143,11 +143,11 @@ function App() {
       });
 
       console.log("Received analysis:", response.data.analysis);
-      setAnalysis(response.data.analysis);
 
       const analysisResult = response.data.analysis || "No analysis returned from the server.";
       setAnalysis(analysisResult);
-      await saveResponse(theme, analysisResult);
+
+      await saveResponse(theme, analysisResult, personalityMode);
     } catch (error) {
       console.error("Error analyzing personality:", error.response?.data || error.message);
       setAnalysis("Error: Could not analyze personality. Please try again.");
